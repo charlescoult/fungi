@@ -1,5 +1,5 @@
-import json
 import os
+import json
 import sys
 import pandas as pd
 from google_images_search import GoogleImagesSearch
@@ -15,7 +15,7 @@ api_info = get_api_info( api_info_fn )
 gis = GoogleImagesSearch( api_info['API_KEY'], api_info['CX'] )
 
 def query(
-        q_str,
+        q_str = 'boletus edulis',
         num_images = 10,
         filetype = 'jpg|png',
         img_type = 'photo',
@@ -33,19 +33,20 @@ def query(
             # 'imgType': 'clipart|face|lineart|stock|photo|animated|imgTypeUndefined', ##
             # 'imgSize': 'huge|icon|large|medium|small|xlarge|xxlarge|imgSizeUndefined', ##
             # 'imgDominantColor': 'black|blue|brown|gray|green|orange|pink|purple|red|teal|white|yellow|imgDominantColorUndefined', ##
-            # 'imgColorType': 'color|gray|mono|trans|imgColorTypeUndefined' ##
+            'imgColorType': 'color' ##
             }
 
     # folder setup
     # files are downloaded to download_folder, resized, then moved to images_folder with
     # a new name, 
     download_folder = os.path.join(md.data_folder, 'download')
+    os.makedirs( download_folder, exist_ok=True )
     images_folder = os.path.join(md.data_folder, 'images')
+    os.makedirs( images_folder, exist_ok=True )
 
-    # retrieve existing log, if it exists, otherwise start anew
-    md_log = md.load()
 
     # search first, then download and resize afterwards:
+    print(f"Executing query for: {search_params['q']}")
     query_timestamp = pd.Timestamp.now()
     gis.search( search_params = search_params )
     for i, image in enumerate(gis.results()):
@@ -72,6 +73,8 @@ def query(
 
         md_df.append(image_md, ignore_index=True)
 
+    # add files 
+    md_df = md.load()
     print(md_df.head())
     md.save( md_df )
 
@@ -79,7 +82,7 @@ def query(
 
 def main():
     q_str = sys.argv[1:]
-    query( q_str )
+    query()
 
 if __name__ == '__main__':
     try:
