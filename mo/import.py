@@ -5,26 +5,7 @@ import pandas as pd
 import requests as rq
 from tqdm import tqdm
 
-# CSV files updated nightly
-data_urls = {
-        "observations": 'https://mushroomobserver.org/observations.csv',
-        "images_observations": 'https://mushroomobserver.org/images_observations.csv',
-        "names": 'https://mushroomobserver.org/names.csv',
-        "locations": 'https://mushroomobserver.org/locations.csv',
-        "name_descriptions": 'https://mushroomobserver.org/name_descriptions.csv',
-        }
-
-# unique row ids for each df
-index_columns = {
-        "observations": 'id',
-        "images_observations": 'image_id',
-        "names": 'id',
-        "locations": 'id',
-        "name_descriptions": 'id',
-        }
-
-# local file for storing data
-data_hdf = 'data.h5'
+import schema
 
 # must pass a valid user-agent in header for GET request otherwise error 403 returned
 request_header = {
@@ -36,14 +17,15 @@ request_header = {
         'Connection': 'keep-alive'
         }
 
-
 def get_current_data_dfs():
 
     current_dfs = {}
 
     # todo: parallelize downlaods
-    for key, url in data_urls.items():
+    for key, url in schema.data_urls.items():
         print( f'Downloading: {key}' )
+
+        retrieved = pd.Timestamp.now()
 
         # using tqdm
         current_dfs[ key ] = pd.concat([ chunk for chunk in tqdm(
@@ -60,62 +42,36 @@ def get_current_data_dfs():
         # csv_file = io.StringIO( rq.get( url ).content.decode('utf-8') )
         # current_dfs[ key ] = pd.read_csv( csv_file )
 
+        # set index according to definitions in schema.index_columns
+        current_dfs[ key ].set_index( schema.index_columns[ key ] )
+
+        # Add a timestamp for when the data was collected
+        # current_dfs[ key ].assign( **{ '_retrieved': retrieved } )
+        current_dfs[ key ] = current_dfs[ key ].assign( **{ '_retrieved': retrieved } )
+
         print( current_dfs[ key ].head() )
         print()
 
     return current_dfs
 
-def get_old_data_dfs():
+def get_old_data_dfs( data_hdf = schema.data_hdf):
 
     old_dfs = {}
 
     if ( os.path.exists( data_hdf ) ):
-        for key in data_urls.keys():
+        for key in schema.data_urls.keys():
             old_dfs[ key ] = pd.read_hdf( data_hdf, key )
     else:
         print( f'File "{data_hdf}" does not exist.' )
         # populate with empty DataFrames
-        for key in data_urls.keys():
+        for key in schema.data_urls.keys():
             old_dfs[ key ] = pd.DataFrame()
 
     return old_dfs
 
-def save_data_dfs( data_dfs, data_hdf = data_hdf ):
+def save_data_dfs( data_dfs, data_hdf = schema.data_hdf ):
     for key, df in data_dfs.items():
         df.to_hdf( data_hdf, key )
-
-# 'runs.h5' contains a list of files that need to be taken in by the next
-# process in the data pipeline 
-runs_hdf = 'runs.h5'
-runs_df_key = 'runs'
-
-def get_runs():
-    if( os.path.exists( runs_hdf ) ):
-        return pd.read_hdf( runs_hdf, runs_df_key )
-    else:
-        return 
-
-def save_runs():
-    pass
-
-# returns only the rows in df2 whose 'id's are not in df1
-# would this be easier if we set the id's to be the indexes? (df1.set_index('id'), etc.)
-# if so, how would this be done?
-def get_new_data( df1, df2 ):
-
-    # JOIN RIGHT on 'id' column (how='right' not really necessary but saves computation)
-    df = df1.merge( df2, on='id', suffixes = ('_DROP', ''), indicator=True, how='right')
-    # Only keep 'id's from df2
-    df = df.loc[ df['_merge'] == 'right_only' ]
-    # get rid of the columns with the '_DROP' suffix (column values from df1)
-    df = df.loc[ :, ~ df.columns.str.endswith('_DROP') ]
-    # drop the indicator column from the merge
-    df = df.drop( '_merge', axis = 1 )
-
-    # one-liner
-    # return df1.merge(df2, on='id', suffixes= ('_DROP',''), indicator=True, how='right').loc[lambda x : x['_merge'] == 'right_only' ].loc[ :, lambda x : ~x.columns.str.endswith('_DROP') ].drop( '_merge', axis=1)
-
-    return df
 
 def main():
 
@@ -123,17 +79,16 @@ def main():
     current_data_dfs = get_current_data_dfs()
 
     new_data_dfs = {}
-    for key in data_urls.keys():
-        new_data_df = get_new_data( old_data_dfs[ key ], current_data_dfs[ key ] )
+    for key in schema.data_urls.keys():
+        # concat new and old dfs, dropping those with duplicate indicies, keeping the values of the old_data
+        # in order to retain the older timestamps
 
-    runs_df = get_runs()
-    
-    # create a new run
+        # select rows in current data where the index (id) is not in the old data
+        only_new_data_df = current_data_dfs[ key ][ ~ current_data_dfs[ key ].index.isin( old_data_dfs[ key ] ) ]
+        # add the new rows to the old data
+        new_data_dfs[ key ] = pd.concat( [ old_data_dfs[ key ], only_new_data_df ] )
 
-
-
-
-
+    save_data_dfs( new_data_dfs )
 
 if __name__ == '__main__':
     try:
