@@ -11,4 +11,5 @@ dependencies:
   - kaggle
   - google-cloud-vision
   - pytables
+  - pyinaturalist
 prefix: /home/charlescoult/.conda/envs/fungi
