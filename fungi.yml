@@ -1,0 +1,14 @@
+name: fungi
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pyarrow
+  - pandas
+  - python=3.10
+  - nb_conda_kernels
+  - jupyterlab
+  - kaggle
+  - google-cloud-vision
+  - pytables
+prefix: /home/charlescoult/.conda/envs/fungi
