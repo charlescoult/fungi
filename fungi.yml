@@ -12,4 +12,7 @@ dependencies:
   - google-cloud-vision
   - pytables
   - pyinaturalist
+  - panel
+  - param
+  - seaborn
 prefix: /home/charlescoult/.conda/envs/fungi
