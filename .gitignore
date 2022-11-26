@@ -6,3 +6,6 @@ __pycache__/
 
 gcp/data/
 *.h5
+*.sqlite
+
+gbif/fungi/
