@@ -15,4 +15,6 @@ dependencies:
   - panel
   - param
   - seaborn
+  - scikit-learn
+  - yapf
 prefix: /home/charlescoult/.conda/envs/fungi

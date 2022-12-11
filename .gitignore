@@ -9,3 +9,4 @@ gcp/data/
 *.sqlite
 
 gbif/fungi/
+gbif/media/
