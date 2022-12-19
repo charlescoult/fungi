@@ -17,4 +17,6 @@ dependencies:
   - seaborn
   - scikit-learn
   - yapf
+  - tensorflow
+  - boto3
 prefix: /home/charlescoult/.conda/envs/fungi
