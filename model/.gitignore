@@ -1,3 +1,5 @@
 tb_log/
+tb_log_2/
 model.*/
 gs_data/
+*_logs/

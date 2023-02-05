@@ -13,7 +13,7 @@ import os
 
 class Dataset():
 
-    def __init__(self, dataset_dir, batch_size):
+    def __init__(self, dataset_dir, batch_size, transformations = None):
         self.dataset_dir = dataset_dir
         self.batch_size = batch_size
         self.load_dataset()
@@ -40,6 +40,9 @@ class Dataset():
             subset='validation',
             shuffle=True,
         )
+
+        if (transformations):
+
 
 class Metadata():
 
@@ -135,7 +138,10 @@ class GridSearch():
 
         model.compile(
             optimizer=tf.optimizers.Adam(learning_rate=learning_rate_lim),
-            loss=tf.keras.losses.CategoricalCrossentropy(),
+            # loss=tf.keras.losses.CategoricalCrossentropy(),
+            loss=tf.keras.losses.CategoricalCrossentropy(
+                label_smoothing = label_smoothing, # forgot to add label smoothing in first run!!
+            ),
             metrics=[
                 'accuracy',
                 tf.keras.metrics.TopKCategoricalAccuracy(k=3, name="Top3"),
@@ -178,6 +184,7 @@ def run():
 
     gs.set_dataset_dir("/mnt/cub/CUB_200_2011/images")
 
+    '''
     param_space = {
         "learning_rate_lim": [
             0.001,
@@ -197,6 +204,30 @@ def run():
         ],
         "train_full": [
             # True,
+            False,
+        ],
+    }
+    '''
+    # narrowed down param space based on results of first runs
+    param_space = {
+        'learning_rate_lim': [
+            # 0.00015,
+            0.0001,
+            # 0.00005,
+        ],
+        'batch_size': [
+            64, 128,
+        ],
+        'dropout': [
+            *np.linspace(0, 0.5, num=4)[:-1],
+        ],
+        'epochs': [
+            30,
+        ],
+        'label_smoothing': [
+            *np.linspace(0, 0.3, num=3),
+        ],
+        'train_full': [
             False,
         ],
     }
