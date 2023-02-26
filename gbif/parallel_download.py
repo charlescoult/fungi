@@ -12,7 +12,7 @@ def download_image( args ):
     url = args[0]
     index = args[1]
     ext = args[2]
-    fn = os.path.join('/mnt/media', str( index ) ) + ext
+    fn = os.path.join('/mnt/gbif/media', str( index ) ) + ext
 
     # return if file already exists
     if (os.path.exists(fn)):

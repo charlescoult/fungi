@@ -3,20 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - pyarrow
-  - pandas
-  - python=3.10
-  - nb_conda_kernels
-  - jupyterlab
-  - kaggle
-  - google-cloud-vision
-  - pytables
-  - pyinaturalist
-  - panel
-  - param
-  - seaborn
-  - scikit-learn
-  - yapf
   - tensorflow-gpu
+  - tensorflow-hub
+  - jupyterlab
+  - scikit-learn
+  - seaborn
   - boto3
+  - kaggle
+  - nb_conda_kernels
+  - pandas
+  - pytables
+  - xlrd
+  - pyod
 prefix: /home/charlescoult/.conda/envs/fungi
