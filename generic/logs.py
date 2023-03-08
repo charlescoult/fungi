@@ -14,7 +14,6 @@ class Log():
         data_dir: str = "./log",
         hdf_filename: str = 'model.h5',
     ):
-        timestamp = ''
         self.model_data_dir = os.path.join( data_dir, dataset_name, model_name, run_name )
         self.model_df_filename =  os.path.join( data_dir, dataset_name, model_name, hdf_filename )
         self.df = self.load_metadata()

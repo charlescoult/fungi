@@ -91,7 +91,7 @@ if __name__ == '__main__':
     log = Log(
         model_name = model.get_model_name(),
         dataset_name = dataset.meta[0],
-        timestamp = datetime.datetime.now().strftime('%Y_%m_%d-%H_%M_%S_'),
+        run_name = datetime.datetime.now().strftime('%Y_%m_%d-%H_%M_%S_'),
         data_dir = log_data_dir,
     )
 
