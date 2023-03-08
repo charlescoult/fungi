@@ -9,24 +9,30 @@ class Log():
     def __init__(
         self,
         model_name: str,
-        data_dir: str = "./logs",
-        hdf_filename: str = "runs.h5",
+        dataset_name: str,
+        data_dir: str = "./log",
+        hdf_filename: str = 'model.h5',
     ):
-        self.data_dir = os.path.join( data_dir, model_name )
-        self.filename =  os.path.join( self.data_dir, hdf_filename )
+        self.model_data_dir = os.path.join( data_dir, dataset_name, model_name )
+        self.filename =  os.path.join( self.model_data_dir, hdf_filename )
         self.df = self.load_metadata()
 
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(
-            log_dir = self.data_dir,
+            log_dir = self.model_data_dir,
             histogram_freq = 1,
         )
 
         self.model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-            os.path.join(self.data_dir, 'best_model' ),
+            os.path.join(self.model_data_dir, 'best_model' ),
             save_best_only = True,
             monitor = 'val_loss',
             # mode = 'min', # should be chosen correctly based on monitor value
         )
+
+        self.callbacks = [
+            self.tensorboard_callback,
+            self.model_checkpoint_callback,
+        ]
 
     def load_metadata(self):
         if ( os.path.exists(self.filename) ):

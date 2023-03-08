@@ -48,10 +48,12 @@ class Run:
             epochs = self.max_epochs,
             callbacks = [
                 # 'functional' callbacks
-                self.model.early_stopping_callback,
+                # self.model.early_stopping_callback,
+                *self.model.callbacks,
                 # 'logging/static' callbacks
-                self.log.tensorboard_callback,
-                self.log.model_checkpoint_callback,
+                *self.log.callbacks,
+                # self.log.tensorboard_callback,
+                # self.log.model_checkpoint_callback,
             ],
         )
 
@@ -87,6 +89,7 @@ if __name__ == '__main__':
 
     log = Log(
         model_name = model.get_model_name(),
+        dataset_name = dataset.meta[0],
         data_dir = log_data_dir,
     )
 

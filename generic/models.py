@@ -98,6 +98,10 @@ class Model(tf.keras.Sequential):
             min_delta = 0.01,
         )
 
+        self.callbacks = [
+            self.early_stopping_callback,
+        ]
+
     @staticmethod
     def build_data_augmentation():
         data_augmentation = tf.keras.Sequential([
