@@ -8,7 +8,7 @@ class Log():
 
     def __init__(
         self,
-        data_dir = "./",
+        data_dir = "./logs",
         hdf_filename = "runs.h5",
     ):
         self.data_dir = data_dir

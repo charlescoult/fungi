@@ -59,7 +59,7 @@ class Run:
 
 if __name__ == '__main__':
 
-    max_epochs = 20
+    max_epochs = 2
     base_model_meta = Model.base_models_meta[2]
     dataset_meta = Dataset.datasets_meta[1]
 
