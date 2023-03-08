@@ -59,6 +59,8 @@ class Run:
 
 if __name__ == '__main__':
 
+    log_data_dir = '/media/data/models'
+
     max_epochs = 2
     base_model_meta = Model.base_models_meta[2]
     dataset_meta = Dataset.datasets_meta[1]
@@ -84,7 +86,8 @@ if __name__ == '__main__':
 
 
     log = Log(
-        data_dir = '/media/data/models'
+        model_name = model.get_model_name(),
+        data_dir = log_data_dir,
     )
 
 
