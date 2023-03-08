@@ -83,7 +83,9 @@ if __name__ == '__main__':
     )
 
 
-    log = Log()
+    log = Log(
+        data_dir = '/media/data/models'
+    )
 
 
     run = Run(

@@ -195,11 +195,10 @@ class Model(tf.keras.Sequential):
 
     # returns a unique name that accurately describes the model building function or
     # the tfhub model (by url) that was passed
-    @staticmethod
-    def get_model_name( model_handle ):
+    def get_model_name( self ):
 
-        if callable(model_handle):
-            return f'keras.applications/{model_handle.__name__}'
+        if callable(self.model_handle):
+            return f'keras.applications/{self.model_handle.__name__}'
         else:
-            split = model_handle.split('/')
+            split = self.model_handle.split('/')
             return f'tfhub/{split[-5]}.{split[-4]}.{split[-3]}'

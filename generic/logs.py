@@ -8,11 +8,12 @@ class Log():
 
     def __init__(
         self,
-        data_dir = "./logs",
-        hdf_filename = "runs.h5",
+        model_name: str,
+        data_dir: str = "./logs",
+        hdf_filename: str = "runs.h5",
     ):
-        self.data_dir = data_dir
-        self.filename =  os.path.join( data_dir, hdf_filename )
+        self.data_dir = os.path.join( data_dir, model_name )
+        self.filename =  os.path.join( self.data_dir, hdf_filename )
         self.df = self.load_metadata()
 
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(
