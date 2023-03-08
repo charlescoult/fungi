@@ -1,4 +1,5 @@
 import tensorflow as tf
+import datetime
 from datasets import Dataset
 from models import Model
 from logs import Log
@@ -90,6 +91,7 @@ if __name__ == '__main__':
     log = Log(
         model_name = model.get_model_name(),
         dataset_name = dataset.meta[0],
+        timestamp = datetime.datetime.now().strftime('%Y_%m_%d-%H_%M_%S_'),
         data_dir = log_data_dir,
     )
 
