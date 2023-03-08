@@ -8,11 +8,11 @@ flowers_data_dir = pathlib.Path(flowers_data_dir)
 class Dataset:
 
     datasets_meta = [
-        ('CUB-200-2011', '/mnt/cub/CUB_200_2011/images'),
+        ('CUB-200-2011', '/media/data/cub/CUB_200_2011/images'),
         ('flowers', flowers_data_dir),
         (
             'GBIF_fungi',
-            '/mnt/gbif/media',
+            '/media/data/gbif/media',
         ),
     ]
 
