@@ -36,12 +36,12 @@ class Log():
         ]
 
     def load_metadata(self):
-        if ( os.path.exists(self.filename) ):
-            return pd.read_hdf( self.filename, self.hdf_key )
+        if ( os.path.exists(self.model_df_filename) ):
+            return pd.read_hdf( self.model_df_filename, self.hdf_key )
         else: return pd.DataFrame()
 
     def save_df(self):
-        self.df.to_hdf(self.filename, self.hdf_key)
+        self.df.to_hdf(self.model_df_filename, self.hdf_key)
 
     def add_run(self, params, log_dir, time, scores):
 
