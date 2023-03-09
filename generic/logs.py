@@ -19,6 +19,9 @@ class Log():
         self.model_df_filename =  os.path.join( data_dir, dataset_name, model_name, hdf_filename )
         self.df = self.load_metadata()
 
+        if not os.path.exists( self.model_data_dir ):
+            os.makedirs( self.model_data_dir )
+
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(
             log_dir = self.model_data_dir,
             histogram_freq = 1,
