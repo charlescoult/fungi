@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflowjs as tfjs
 import datetime
 from datasets import Dataset
 from models import Model
