@@ -78,7 +78,7 @@ if __name__ == '__main__':
         seed = 42,
     )
 
-    print(dataset)
+
 
     model = Model(
         base_model_meta,
@@ -96,6 +96,7 @@ if __name__ == '__main__':
         data_dir = log_data_dir,
     )
 
+    log.save_classes( dataset.classes )
 
     run = Run(
         dataset,
@@ -106,4 +107,5 @@ if __name__ == '__main__':
 
     run.start()
 
-    tfjs.converters.save_keras_model(model, os.path.join(run.log.model_data_dir, 'tfjs'))
+    # dependency issues for saving to tfjs model
+    # tfjs.converters.save_keras_model(model, os.path.join(run.log.model_data_dir, 'tfjs'))

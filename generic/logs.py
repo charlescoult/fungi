@@ -1,4 +1,5 @@
 import tensorflow as tf
+import json
 import os
 import pandas as pd
 
@@ -34,6 +35,15 @@ class Log():
             self.tensorboard_callback,
             self.model_checkpoint_callback,
         ]
+
+    def save_classes(
+        self,
+        classes: list[str],
+        filename: str = 'classes.json',
+    ):
+        with open( os.path.join( self.model_data_dir , 'classes.json' ), 'w') as out:
+            json.dump(classes, out, indent=2)
+        
 
     def load_metadata(self):
         if ( os.path.exists(self.model_df_filename) ):
