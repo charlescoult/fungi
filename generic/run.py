@@ -6,7 +6,6 @@ from logs import Log
 
 class Run:
 
-
     def __init__(
         self,
         dataset: Dataset,
@@ -77,8 +76,6 @@ if __name__ == '__main__':
         seed = 42,
     )
 
-
-
     model = Model(
         base_model_meta,
         num_classes = len(dataset.classes),
@@ -86,7 +83,6 @@ if __name__ == '__main__':
         thawed_base_model_layers = -1,
         data_augmentation = False,
     )
-
 
     log = Log(
         model_name = model.get_model_name(),
