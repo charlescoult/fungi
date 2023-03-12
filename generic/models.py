@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow_hub as hub
+from logs import Log
 
 class Model(tf.keras.Sequential):
 
@@ -64,7 +65,8 @@ class Model(tf.keras.Sequential):
         base_model_metadata,
         num_classes,
         dropout,
-        thawed_base_model_layers,
+        freeze_base_model,
+        log: Log,
         data_augmentation = False,
     ):
         super().__init__(name = "full_model")
@@ -81,7 +83,7 @@ class Model(tf.keras.Sequential):
         self.base_model = self.build_base_model(
             self.model_handle,
             input_shape=(self.input_dimension, self.input_dimension) + (3,),
-            thawed_base_model_layers = thawed_base_model_layers,
+            freeze_base_model = freeze_base_model,
         )
         self.add(self.base_model)
 
@@ -98,8 +100,11 @@ class Model(tf.keras.Sequential):
             min_delta = 0.01,
         )
 
+        self.log = log
+
         self.callbacks = [
             self.early_stopping_callback,
+            *self.log.callbacks,
         ]
 
     @staticmethod
@@ -118,7 +123,7 @@ class Model(tf.keras.Sequential):
     def build_base_model(
         base_model_handle,
         input_shape,
-        thawed_base_model_layers = 0,
+        freeze_base_model = True,
         name="base_model",
     ):
         # If model_handle is a model building function, use that function
@@ -153,10 +158,8 @@ class Model(tf.keras.Sequential):
     @staticmethod
     def freeze_base_model(
         base_model,
-        thawed_base_model_layers = 0,
+        freeze_base_model = True,
     ):
-        print("Thawing...", thawed_base_model_layers)
-
         print(base_model)
         print(base_model.summary())
 

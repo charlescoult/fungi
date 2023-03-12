@@ -1,148 +1,29 @@
 import pathlib
 import tensorflow as tf
 import pandas as pd
-
-flowers_dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-flowers_data_dir = tf.keras.utils.get_file('flower_photos', origin=flowers_dataset_url, untar=True)
-flowers_data_dir = pathlib.Path(flowers_data_dir)
-
-class Dataset:
-
-    datasets_meta = [
-        ('CUB-200-2011', '/media/data/cub/CUB_200_2011/images'),
-        ('flowers', flowers_data_dir),
-        (
-            'GBIF_fungi',
-            '/media/data/gbif/media',
-        ),
-    ]
-
-    def __init__(
-        self,
-        meta,
-        image_size = 244,
-        batch_size = 64,
-        preprocess_input = None,
-        validation_split = 0.05,
-        seed = 42,
-    ):
-        self.meta = meta
-        self.image_size = image_size
-        self.batch_size = batch_size
-        self.preprocess_input = preprocess_input
-        self.validation_split = validation_split
-        self.seed = seed
-        self.build_dataset()
-
-    # build a dataset object from a directory of images 
-    def build_dataset(
-        self,
-    ):
-        labels = 'infer'
-
-        self.train, self.val = tf.keras.utils.image_dataset_from_directory(
-            self.meta[1],
-            batch_size = self.batch_size,
-            validation_split = self.validation_split,
-            image_size = (self.image_size, self.image_size),
-            subset = "both",
-            shuffle = True, # default but here for clarity
-            seed = self.seed,
-            label_mode = "categorical", # enables one-hot encoding (use 'int' for sparse_categorical_crossentropy loss)
-            # labels = labels, # need to default to 'infer', not None
-        )
-
-        # Retrieve class names
-        # (can't do this after converting to PrefetchDataset?)
-        self.classes = self.train.class_names
-        # Prefetch images
-        # train = train.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
-        # val = val.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
-        self.train = self.train.prefetch(buffer_size=tf.data.AUTOTUNE)
-        self.val = self.val.prefetch(buffer_size=tf.data.AUTOTUNE)
-
-        # apply preprocessing function
-        self.train = self.train.map(
-            lambda x, y: (self.preprocess_input(x), y),
-            num_parallel_calls = 16,
-        )
-        self.val = self.val.map(
-            lambda x, y: (self.preprocess_input(x), y),
-            num_parallel_calls = 16,
-        )
-
-
-class CustomDataGen( tf.keras.utils.Sequence ):
-    
-    def __init__(
-        self,
-        df,
-        X_col,
-        y_col,
-        batch_size,
-        input_size=(224, 224, 3),
-        shuffle=True,
-        augment=False,
-    ):
-        self.df = df.copy()
-        self.X_col = X_col
-        self.y_col = y_col
-        self.batch_size = batch_size
-        self.input_size = input_size
-        self.shuffle = shuffle
-        self.augment = augment
-
-        self.n = len(self.df)
-    
-    def __get_input(self, path, bbox, target_size):
-    
-        xmin, ymin, w, h = bbox['x'], bbox['y'], bbox['width'], bbox['height']
-
-        image = tf.keras.preprocessing.image.load_img(path)
-        image_arr = tf.keras.preprocessing.image.img_to_array(image)
-
-        image_arr = image_arr[ymin:ymin+h, xmin:xmin+w]
-        image_arr = tf.image.resize(image_arr,(target_size[0], target_size[1])).numpy()
-
-        return image_arr/255.
-    
-    def __get_output(self, label, num_classes):
-        return tf.keras.utils.to_categorical(label, num_classes=num_classes)
-    
-    def __get_data(self, batches):
-        # Generates data containing batch_size samples
-        path_batch = batches[self.X_col['path']]
-        bbox_batch = batches[self.X_col['bbox']]
-        
-        name_batch = batches[self.y_col['name']]
-        # type_batch = batches[self.y_col['type']]
-
-        X_batch = np.asarray([self.__get_input(x, y, self.input_size) for x, y in zip(path_batch, bbox_batch)])
-
-        y0_batch = np.asarray([self.__get_output(y, self.n_name) for y in name_batch])
-        # y1_batch = np.asarray([self.__get_output(y, self.n_type) for y in type_batch])
-
-        return X_batch, y0_batch
-    
-    def __getitem__(self, index):
-        batches = self.df[index * self.batch_size:(index + 1) * self.batch_size]
-        X, y = self.__get_data(batches)        
-        return X, y
-    
-    def __len__(self):
-        return self.n // self.batch_size
-
-    def on_epoch_end(self):
-        if self.shuffle:
-            self.df = self.df.sample(frac=1).reset_index(drop=True)
-
-import mimetypes as mt
 import os
 from sklearn.model_selection import train_test_split
 from util import timeit
+from models import Model
+import numpy as np
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+
+class DatasetGroup:
+
+    def __init__(
+        self,
+        train_ds,
+        val_ds,
+        test_ds,
+        classes,
+    ):
+        self.train_ds = train_ds
+        self.val_ds = val_ds
+        self.test_ds = test_ds
+        self.classes = classes
+    
 def load_image(
     filename,
     label,
@@ -150,6 +31,7 @@ def load_image(
     img_raw = tf.io.read_file( filename )
     img_tensor = tf.image.decode_image(
         img_raw,
+        dtype = tf.dtypes.float32,
         channels = 3,
         # Important to include the following
         # https://stackoverflow.com/questions/44942729/tensorflowvalueerror-images-contains-no-shape
@@ -159,33 +41,52 @@ def load_image(
 
 def preprocessing_default(
     img_tensor,
-    label,
+    input_dim,
 ):
-    img_tensor_preprocessed = tf.image.resize( img_tensor, [ 299, 299 ] )
     img_tensor_preprocessed = img_tensor_preprocessed/255.0
-    return ( img_tensor_preprocessed, label )
+    return img_tensor_preprocessed
 
+def run_preprocessing(
+    img_tensor,
+    label,
+    preprocessing,
+    input_dim,
+):
+    img_tensor_preprocessed = tf.image.resize(
+        img_tensor,
+        [ input_dim, input_dim ],
+    )
+    return ( preprocessing(img_tensor_preprocessed), label )
 
 def load_image_dataset_from_df(
     df,
     batch_size,
+    input_dim,
     preprocessing,
+    label_col,
+    classes,
+    filename_col = 'filename',
 ):
     ds = tf.data.Dataset.from_tensor_slices(
         (
-            tf.constant( df[ 'filename' ].values ),
+            tf.constant( df[ filename_col ].values ),
             tf.constant( df[ label_col ].values )
         ),
     )
 
     ds = ds.map(
         load_image,
-        num_parallel_calls=AUTOTUNE,
+        num_parallel_calls = AUTOTUNE,
     )
 
     ds = ds.map(
-        preprocessing,
-        # num_parallel_calls=AUTOTUNE,
+        lambda img, label: run_preprocessing(
+            img,
+            label,
+            preprocessing,
+            input_dim,
+        ),
+        num_parallel_calls = AUTOTUNE,
     )
 
     ds = ds.batch( batch_size )
@@ -197,16 +98,34 @@ def load_image_dataset_from_df(
 
     return ds
 
+def downsample( df ):
+
+    min = 100
+
+    # print(df['media_count_per_taxonID'].min())
+    limited_df = df.groupby(by='taxonID').head( min )
+    newCounts = limited_df['taxonID'].map( limited_df['taxonID'].value_counts() )
+    # print(newCounts.max())
+
+    return limited_df
+
 def load_image_datasets_from_hdf(
     hdf_path,
     hdf_key,
     label_col,
     test_size = 0.05,
     val_size = 0.1,
+    input_dim = 299,
     preprocessing = preprocessing_default,
 ):
 
     df = pd.read_hdf( hdf_path, hdf_key )
+
+    df = downsample(df)
+
+    classes = df[ label_col ].unique()
+
+    df[ label_col ] = df[ label_col ].astype('category').cat.codes
 
     train_df, test_df = train_test_split(
         df,
@@ -222,11 +141,8 @@ def load_image_datasets_from_hdf(
         random_state = 42,
     )
 
-    assert len(train_df[label_col].unique()) == len(val_df[label_col].unique()) == len(test_df[label_col].unique())
-
-    # properties of the base_model
-    input_dim = 299
-    scale_coef = 1./255
+    # assert that each dataset has the same number of classes
+    assert len(classes) == len(train_df[label_col].unique()) == len(val_df[label_col].unique()) == len(test_df[label_col].unique())
 
     # model hyperparameter
     batch_size = 64
@@ -234,20 +150,34 @@ def load_image_datasets_from_hdf(
     train_ds = load_image_dataset_from_df(
         train_df,
         batch_size,
+        input_dim,
         preprocessing,
+        label_col,
+        classes,
     ) 
     val_ds = load_image_dataset_from_df(
         val_df,
         batch_size,
+        input_dim,
         preprocessing,
+        label_col,
+        classes,
     ) 
     test_ds = load_image_dataset_from_df(
         test_df,
         batch_size,
+        input_dim,
         preprocessing,
+        label_col,
+        classes,
     ) 
 
-    return train_ds, val_ds, test_ds
+    return DatasetGroup(
+        train_ds,
+        val_ds,
+        test_ds,
+        classes,
+    )
 
 if __name__ == '__main__':
 
@@ -257,9 +187,18 @@ if __name__ == '__main__':
     hdf_key = 'media_merged_filtered-by-species_350pt'
 
     label_col = 'acceptedScientificName'
+
+    base_model = Model.base_models_meta[0]
     
-    train_ds, val_ds, test_ds = load_image_datasets_from_hdf(
+    dataset_group = load_image_datasets_from_hdf(
         hdf_path,
         hdf_key,
         label_col,
+        input_dim = base_model[1],
+        preprocessing = base_model[2],
     )
+
+    for img, label in dataset_group.train_ds.take(1):
+        print(img.shape)
+        print(label.shape)
+

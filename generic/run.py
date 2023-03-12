@@ -1,21 +1,23 @@
 import tensorflow as tf
 import datetime
-from datasets import Dataset
+from datasets import *
 from models import Model
 from logs import Log
+import os
 
 class Run:
 
     def __init__(
         self,
-        dataset: Dataset,
+        dataset_group,
         model: Model,
         log: Log,
+        description,
         max_epochs = 20,
         learning_rate = 0.001,
         label_smoothing = 0,
     ):
-        self.dataset = dataset
+        self.dataset_group = dataset_group
         self.model = model
         self.log = log
         self.max_epochs = max_epochs
@@ -24,16 +26,16 @@ class Run:
 
         self.model.compile(
             optimizer = tf.keras.optimizers.Adam(
-                learning_rate=learning_rate
+                learning_rate = learning_rate
             ),
-            # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-            loss=tf.keras.losses.CategoricalCrossentropy(
-                # from_logits=True,
-                label_smoothing = self.label_smoothing,
-            ),
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            # loss=tf.keras.losses.CategoricalCrossentropy(
+            #     # from_logits=True,
+            #     label_smoothing = self.label_smoothing,
+            # ),
             metrics=[
                 tf.keras.metrics.CategoricalAccuracy(),
-                tf.keras.metrics.CategoricalCrossentropy(),
+                tf.keras.metrics.SparseCategoricalCrossentropy(),
                 tf.keras.metrics.TopKCategoricalAccuracy(k=3, name="Top3"),
                 tf.keras.metrics.TopKCategoricalAccuracy(k=10, name="Top10"),
             ],
@@ -43,8 +45,8 @@ class Run:
         self,
     ):
         history = self.model.fit(
-            self.dataset.train,
-            validation_data = self.dataset.val,
+            self.dataset_group.train_ds,
+            validation_data = self.dataset_group.val_ds,
             epochs = self.max_epochs,
             callbacks = [
                 # 'functional' callbacks
@@ -63,40 +65,48 @@ if __name__ == '__main__':
 
     log_data_dir = '/media/data/models'
 
-    max_epochs = 2
+    max_epochs = 1
     base_model_meta = Model.base_models_meta[2]
-    dataset_meta = Dataset.datasets_meta[1]
 
-    dataset = Dataset(
-        dataset_meta,
-        image_size = base_model_meta[1],
-        batch_size = 64,
-        preprocess_input = base_model_meta[2],
-        validation_split = 0.05,
-        seed = 42,
+    label_col = 'acceptedScientificName'
+
+    # Dataset from hdf file
+    data_dir = '/media/data/gbif'
+    hdf_filename = 'clean_data.h5'
+    hdf_path = os.path.join( data_dir, hdf_filename )
+    hdf_key = 'media_merged_filtered-by-species_350pt'
+
+    dataset_group = load_image_datasets_from_hdf(
+        hdf_path,
+        hdf_key,
+        label_col,
+        input_dim = base_model_meta[1],
+        preprocessing = base_model_meta[2],
     )
 
     model = Model(
         base_model_meta,
-        num_classes = len(dataset.classes),
+        num_classes = len(dataset_group.classes),
         dropout = 0.33,
-        thawed_base_model_layers = -1,
+        freeze_base_model = False,
         data_augmentation = False,
+        log = log,
     )
 
     log = Log(
         model_name = model.get_model_name(),
-        dataset_name = dataset.meta[0],
+        dataset_name = 'gbif',
         run_name = datetime.datetime.now().strftime('%Y_%m_%d-%H_%M_%S'),
         data_dir = log_data_dir,
     )
 
-    log.save_classes( dataset.classes )
+    log.save_classes( dataset_group.classes )
 
     run = Run(
-        dataset,
+        dataset_group,
         model,
         log,
+        "",
         max_epochs,
     )
 

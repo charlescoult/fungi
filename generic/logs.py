@@ -45,7 +45,7 @@ class Log():
         filename: str = 'classes.json',
     ):
         with open( os.path.join( self.model_data_dir , 'classes.json' ), 'w') as out:
-            json.dump(classes, out, indent=2)
+            json.dump(list(classes), out, indent=2)
         
 
     def load_metadata(self):
