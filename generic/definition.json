@@ -15,7 +15,14 @@
 		}
 	},
 	"model": {
+		"input": {
+		},
+		"base": {
+		},
+		"classifier": {
+		}
 	},
 	"logging": {
+		"log_dir":
 	}
 }
