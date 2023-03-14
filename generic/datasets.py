@@ -23,7 +23,7 @@ class DatasetGroup:
         self.val_ds = val_ds
         self.test_ds = test_ds
         self.classes = classes
-    
+
 def load_image(
     filename,
     label,
