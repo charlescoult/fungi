@@ -1,0 +1,29 @@
+{ 
+	"batch_size": 64,
+	"max_epochs": 20,
+	"model": {
+		"base": "Inception_v3_iNaturalist",
+		"classifier": {
+			"dropout": 0.3,
+			"output_normalize": false
+		},
+		"learning_rate": 0.0005,
+		"label_smoothing": 0.1
+	},
+	"dataset": {
+		"data_augmentation": false,
+		"downsample": "min",
+		"source": "gbif",
+		"split_test": 0.05,
+		"split_val": 0.1
+
+	},
+	"callbacks": {
+		"early_stopping": {
+			"monitor": "val_loss",
+			"patience": 10,
+			"restore_best_weights": true,
+			"start_from_epoch": 5
+		}
+	}
+}
