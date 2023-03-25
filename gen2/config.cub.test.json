@@ -4,7 +4,7 @@
 	"model": {
 		"base": "Inception_v3_iNaturalist",
 		"classifier": {
-			"dropout": 0.3,
+			"dropout": 0.2,
 			"output_normalize": false
 		},
 		"learning_rate": 0.005,
@@ -12,8 +12,8 @@
 	},
 	"dataset": {
 		"data_augmentation": false,
-		"downsample": "min",
-		"source": "gbif",
+		"downsample": null,
+		"source": "cub",
 		"split_test": 0.05,
 		"split_val": 0.1
 

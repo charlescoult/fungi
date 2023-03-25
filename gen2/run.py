@@ -72,6 +72,12 @@ def start_run(
         datasets[ run['dataset']['source'] ].key,
     )
 
+    # drop unnecessary columns
+    ds_df = ds_df[[
+        datasets[ run['dataset']['source'] ].col_filename,
+        datasets[ run['dataset']['source'] ].col_label,
+    ]]
+
     col_label = datasets[ run['dataset']['source'] ].col_label
 
     # Creating common label_encoder for all IDPs
@@ -80,9 +86,12 @@ def start_run(
 
     label_enc_df = pd.DataFrame( label_enc, columns = label_encoder.get_feature_names_out([col_label]))
 
-    # add encoded labels
-    # ds_df.drop( col_label, axis = 1 )
-    ds_df = ds_df.join( label_enc_df )
+    # source dataframe can have a non-sequential index
+    # THIS BUG TOOK ME WAY TOO LONG TO FIGURE OUT.
+    ds_df = ds_df.reset_index()
+
+    # add the one-hot columns to the DataFrame
+    ds_df = pd.concat( [ ds_df, label_enc_df ], axis = 1 )
 
     ### Dataset Information
 
@@ -124,6 +133,9 @@ def start_run(
         ).sample( n = ds_df_label_vc_min )
     else:
         ds_df_trans = ds_df
+
+    if (ds_df_trans.isna().any().any()):
+        raise Exception("Transformed DataFrame has nan values")
 
 
     # We have transformed the original dataset through downsampling to produce a dataset where all classes have the same number of datapoints as the class with the least amount of datapoints.
