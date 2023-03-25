@@ -346,6 +346,16 @@ def start_run(
 
     run.save()
 
+import argparse
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Generate your vaccination QR code.")
+    parser.add_argument('runs_dir')
+    parser.add_argument('runs_hdf')
+    parser.add_argument('runs_hdf_key')
+    args = parser.parse_args()
+
+    print( args )
 
 
 if __name__ == '__main__':
