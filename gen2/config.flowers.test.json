@@ -7,7 +7,7 @@
 			"dropout": 0.2,
 			"output_normalize": false
 		},
-		"learning_rate": 0.01,
+		"learning_rate": 0.001,
 		"label_smoothing": 0.1
 	},
 	"dataset": {
@@ -21,7 +21,7 @@
 	"callbacks": {
 		"early_stopping": {
 			"monitor": "val_loss",
-			"patience": 10,
+			"patience": 8,
 			"restore_best_weights": true,
 			"start_from_epoch": 5
 		}

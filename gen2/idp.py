@@ -1,6 +1,4 @@
-
 from common import *
-
 
 # ### Input Data Pipeline Generation
 
@@ -10,12 +8,11 @@ def load_image(
     img_raw = tf.io.read_file( filename )
     img_tensor = tf.image.decode_image(
         img_raw,
-        dtype = tf.dtypes.float32,
+        # dtype = tf.dtypes.float32,
         channels = 3,
         expand_animations = False,
     )
     return img_tensor
-
 
 def resize(
     img_tensor,
@@ -26,13 +23,11 @@ def resize(
         [ input_dim, input_dim ],
     )
 
-
 def preprocessing(
     img_tensor,
     preprocessor,
 ):
     return preprocessor( img_tensor )
-
 
 def my_label_encoder( label, mapping ):
     return label == mapping
@@ -40,21 +35,17 @@ def my_label_encoder( label, mapping ):
     # label_encoded = tf.argmax( one_hot )
     # return label_encoded
 
-
 def encode_label(
     label,
     label_encoder = my_label_encoder,
 ):
     return label_encoder( label )
 
-
 def data_augmentation(
     img_tensor,
     augmentation_func,
 ):
     return augmentation_func( img_tensor, training = True )
-
-
 
 # Augmentation function selection
 augmentation_functions = [
@@ -156,8 +147,10 @@ def make_idp(
             num_parallel_calls = AUTOTUNE,
         )
 
+    '''
     # Label encoding
     if ( label_encoder ):
+        print("Label Encoding in make_idp")
         ds = ds.map(
             lambda img_tensor_resized_preprocessed, label: (
                 img_tensor_resized_preprocessed,
@@ -166,6 +159,7 @@ def make_idp(
             ),
             num_parallel_calls = AUTOTUNE,
         )
+        '''
 
     # Batch
     ds = ds.batch( batch_size )
@@ -173,6 +167,6 @@ def make_idp(
     # Prefetch
     ds = ds.prefetch( buffer_size = AUTOTUNE )
 
-    return ds, shuffle_seed
+    return ds, None
 
 

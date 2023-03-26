@@ -72,43 +72,63 @@ def start_run(
         datasets[ run['dataset']['source'] ].key,
     )
 
+    _data_count = len( ds_df )
+
+    col_filename = datasets[ run['dataset']['source'] ].col_filename
+    col_label = datasets[ run['dataset']['source'] ].col_label
+    assert col_label in ds_df.columns
+    assert col_filename in ds_df.columns
+
+    _label_count = len( ds_df[ col_label ].unique().tolist() )
+
     # drop unnecessary columns
     ds_df = ds_df[[
-        datasets[ run['dataset']['source'] ].col_filename,
-        datasets[ run['dataset']['source'] ].col_label,
+        col_filename,
+        col_label,
     ]]
 
-    col_label = datasets[ run['dataset']['source'] ].col_label
+    assert len( ds_df ) == _data_count
+    assert ds_df.isna().all().all() == False
 
     # Creating common label_encoder for all IDPs
     label_encoder = OneHotEncoder( sparse_output = False )
     label_enc = label_encoder.fit_transform( ds_df[[ col_label ]] )
 
-    label_enc_df = pd.DataFrame( label_enc, columns = label_encoder.get_feature_names_out([col_label]))
+    assert len( label_encoder.categories_[0] ) == _label_count
+    assert len( label_enc ) == _data_count
+
+    label_enc_df = pd.DataFrame( label_enc, columns = label_encoder.get_feature_names_out([col_label]) )
+
+    assert len( label_enc_df ) == _data_count
+    assert label_enc_df.isna().all().all() == False
 
     # source dataframe can have a non-sequential index
     # THIS BUG TOOK ME WAY TOO LONG TO FIGURE OUT.
     ds_df = ds_df.reset_index()
 
+    assert len( ds_df ) == _data_count
+    assert ds_df.isna().all().all() == False
+
     # add the one-hot columns to the DataFrame
     ds_df = pd.concat( [ ds_df, label_enc_df ], axis = 1 )
+
+    assert len( ds_df ) == _data_count
+    assert ds_df.isna().all().all() == False
 
     ### Dataset Information
 
     # save classes
-    ds_classes = ds_df[ datasets[ run['dataset']['source'] ].col_label ].unique().tolist()
+    ds_classes = ds_df[ col_label ].unique().tolist()
     print('Label count: %d' % len(ds_classes))
     print('Datapoint count: %d' % len(ds_df))
+
+    assert len( ds_classes ) == _label_count
 
     run['label_mapping_path'] = os.path.join( run['path'], 'label_mapping.json' )
     save_label_mapping(
         ds_classes,
         file_path = run['label_mapping_path'],
     )
-
-    # get value counts for each class
-    ds_df_label_vc = ds_df[ datasets[ run['dataset']['source'] ].col_label ].value_counts()
-    ds_df_label_vc = ds_df_label_vc.sort_values( ascending = False )
 
     ### Dataset Transformation
     # (downsample, upsample, etc.)
@@ -118,8 +138,10 @@ def start_run(
         # if downsample param is 'min', downsample all classes to the same number of
         # samples as the class with the least samples
         if ( run['dataset']['downsample'] == 'min' ):
-            ds_df_label_vc_min = ds_df_label_vc.min()
+            # get value counts for each class
+            ds_df_label_vc_min = ds_df[ col_label ].value_counts().min()
             print('Downsampling to least number of samples per class: %d' % ds_df_label_vc_min)
+            _data_count = ds_df_label_vc_min * _label_count
         else:
             # manual override
             if ( run['dataset']['downsample'] > 0 ):
@@ -129,14 +151,16 @@ def start_run(
 
         # downsample to ds_df_label_vc min datapoints per class
         ds_df_trans = ds_df.groupby(
-            by = datasets[ run['dataset']['source'] ].col_label,
+            by = col_label,
         ).sample( n = ds_df_label_vc_min )
     else:
         ds_df_trans = ds_df
 
-    if (ds_df_trans.isna().any().any()):
-        raise Exception("Transformed DataFrame has nan values")
 
+    # Assert the number of datapoints is still the same
+    assert len( ds_df_trans ) == _data_count
+    # Assert no NaN values
+    assert ds_df_trans.isna().all().all() == False
 
     # We have transformed the original dataset through downsampling to produce a dataset where all classes have the same number of datapoints as the class with the least amount of datapoints.
 
@@ -156,7 +180,7 @@ def start_run(
 
     ds_train, ds_val, ds_test, split_shuffle_seed = dataset_util.train_val_test_split_stratified(
         ds_df_trans,
-        col_label = datasets[ run['dataset']['source'] ].col_label,
+        col_label = col_label,
         val_split = run['dataset']['split_val'],
         test_split = run['dataset']['split_test'],
     )
@@ -178,9 +202,9 @@ def start_run(
 
     # IDP creation
     ds_idp_train, run['dataset']['seed_shuffle'] = make_idp(
-        ds_train[ datasets[ run['dataset']['source'] ].col_filename ].values,
-        ds_train.filter( regex = ( datasets[ run['dataset']['source'] ].col_label + '+' ) ).values,
-        # ds_train[ datasets[ run['dataset']['source'] ].col_label ].values,
+        ds_train[ col_filename ].values,
+        ds_train.filter( regex = ( col_label + '+' ) ).values,
+        # ds_train[ col_label ].values,
         input_dim = base_models[ run['model']['base'] ].input_dim,
         is_training = True,
         batch_size = run['batch_size'],
@@ -190,9 +214,9 @@ def start_run(
     )
 
     ds_idp_val, _ = make_idp(
-        ds_val[ datasets[ run['dataset']['source'] ].col_filename ].values,
-        ds_val.filter( regex = ( datasets[ run['dataset']['source'] ].col_label + '+' ) ).values,
-        # ds_val[ datasets[ run['dataset']['source'] ].col_label ].values,
+        ds_val[ col_filename ].values,
+        ds_val.filter( regex = ( col_label + '+' ) ).values,
+        # ds_val[ col_label ].values,
         input_dim = base_models[ run['model']['base'] ].input_dim,
         is_training = False,
         batch_size = run['batch_size'],
@@ -203,9 +227,9 @@ def start_run(
     )
 
     ds_idp_test, _ = make_idp(
-        ds_test[ datasets[ run['dataset']['source'] ].col_filename ].values,
-        ds_test.filter( regex = ( datasets[ run['dataset']['source'] ].col_label + '+' ) ).values,
-        # ds_test[ datasets[ run['dataset']['source'] ].col_label ].values,
+        ds_test[ col_filename ].values,
+        ds_test.filter( regex = ( col_label + '+' ) ).values,
+        # ds_test[ col_label ].values,
         input_dim = base_models[ run['model']['base'] ].input_dim,
         is_training = False,
         batch_size = run['batch_size'],
@@ -214,6 +238,15 @@ def start_run(
         preprocessor = base_models[ run['model']['base'] ].preprocessor if preprocessing_in_ds else None,
         # label_encoder = label_encoder,
     )
+
+
+
+    # Peek at a batch to ensure compliance with expected values
+    for el in next(iter(ds_idp_train.as_numpy_iterator())):
+        print(el[0].shape)
+        print(el[0].numpy().min())
+        print(el[0].numpy().max())
+
 
     ## Model Building
 
@@ -346,6 +379,9 @@ def start_run(
         np.argmax( predictions, axis=1),
     )
 
+    cce = tf.keras.losses.CategoricalCrossentropy()
+    cce = cce(labels, predictions)
+
     f1 = sklearn.metrics.f1_score(
         np.argmax( test_labels, axis = 1 ),
         np.argmax( predictions, axis = 1 ),
@@ -354,6 +390,7 @@ def start_run(
 
     run['scores'] = {
         'f1': f1,
+        'categorical_crossentropy': cce,
     }
 
     run.save()
