@@ -1,10 +1,10 @@
 { 
-	"batch_size": 64,
-	"max_epochs": 30,
+	"batch_size": 32,
+	"max_epochs": 2,
 	"model": {
 		"base": "Inception_v3_iNaturalist",
 		"classifier": {
-			"dropout": 0.3,
+			"dropout": 0.2,
 			"output_normalize": false
 		},
 		"learning_rate": 0.001,
@@ -13,7 +13,7 @@
 	"dataset": {
 		"data_augmentation": false,
 		"downsample": null,
-		"source": "gbif",
+		"source": "flowers",
 		"split_test": 0.05,
 		"split_val": 0.2
 

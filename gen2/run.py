@@ -11,6 +11,7 @@ import dataset_util
 from idp import augmentation_functions, make_idp
 from model import get_model_name, gen_base_model_layer, gen_classifier_model_layer
 import callbacks
+from scoring import score
 
 import util
 
@@ -133,32 +134,14 @@ def start_run(
     ### Dataset Transformation
     # (downsample, upsample, etc.)
 
-    # Downsample to equal number of samples per class if downsample param is set
-    if ( run['dataset']['downsample'] ):
-        # if downsample param is 'min', downsample all classes to the same number of
-        # samples as the class with the least samples
-        if ( run['dataset']['downsample'] == 'min' ):
-            # get value counts for each class
-            ds_df_label_vc_min = ds_df[ col_label ].value_counts().min()
-            print('Downsampling to least number of samples per class: %d' % ds_df_label_vc_min)
-            _data_count = ds_df_label_vc_min * _label_count
-        else:
-            # manual override
-            if ( run['dataset']['downsample'] > 0 ):
-                print( 'Overriding samples per class to: %d' % run['dataset']['downsample'] )
-                ds_df_label_vc_min = run['dataset']['downsample']
-            else: raise Exception("dataset downsample invalid")
+    # this should really be in the input data pipeline (idp)
+    ds_df_trans = transform_dataset_df(
+        ds_df,
+        col_label,
+        _label_count,
+        downsample = run['dataset']['downsample'],
+    )
 
-        # downsample to ds_df_label_vc min datapoints per class
-        ds_df_trans = ds_df.groupby(
-            by = col_label,
-        ).sample( n = ds_df_label_vc_min )
-    else:
-        ds_df_trans = ds_df
-
-
-    # Assert the number of datapoints is still the same
-    assert len( ds_df_trans ) == _data_count
     # Assert no NaN values
     assert ds_df_trans.isna().all().all() == False
 
@@ -239,13 +222,20 @@ def start_run(
         # label_encoder = label_encoder,
     )
 
-
-
+    '''
     # Peek at a batch to ensure compliance with expected values
-    for el in next(iter(ds_idp_train.as_numpy_iterator())):
+    for el in next( iter( ds_idp_train.as_numpy_iterator() ) ):
         print(el[0].shape)
-        print(el[0].numpy().min())
-        print(el[0].numpy().max())
+
+        # image resized correctly
+        assert el[0].shape[0] == el[0].shape[1] == base_models[ run['model']['base'] ].input_dim
+        # 3 channels
+        assert el[0].shape[2] == 3
+
+        print('Min and max will depend on what the base_model is expecting from preprocessor function.')
+        print(el[0].min())
+        print(el[0].max())
+    '''
 
 
     ## Model Building
@@ -355,57 +345,33 @@ def start_run(
 
     timer['train_end'] = time.perf_counter()
 
+    ## End-of-run metrics
 
     run['time'] = timer['train_end'] - timer['train_start']
-    print(run['time'])
+    print( 'Run took: %d' % run['time'] )
 
+    run['epoch_count'] = len( history.epoch )
+    print( '%d epochs run' % run['epoch_count'] )
 
-    run.save()
+    ## Test data scoring
 
-
-    print( len( history.epoch ) )
-
-
-    # ## Testing
+    # get labels
     test_labels = np.concatenate([y for x, y in ds_idp_test], axis = 0)
 
+    # get predictions
     with strategy.scope():
         predictions = full_model.predict(
             ds_idp_test,
         )
 
-    cm = tf.math.confusion_matrix(
-        np.argmax( test_labels, axis=1),
-        np.argmax( predictions, axis=1),
+    # score results
+    run['scores'] = score(
+        test_labels,
+        predictions,
+        not run['model']['classifier']['output_normalize'],
     )
-
-    cce = tf.keras.losses.CategoricalCrossentropy()
-    cce = cce(labels, predictions)
-
-    f1 = sklearn.metrics.f1_score(
-        np.argmax( test_labels, axis = 1 ),
-        np.argmax( predictions, axis = 1 ),
-        average = 'micro',
-    )
-
-    run['scores'] = {
-        'f1': f1,
-        'categorical_crossentropy': cce,
-    }
 
     run.save()
-
-import argparse
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Generate your vaccination QR code.")
-    parser.add_argument('runs_dir')
-    parser.add_argument('runs_hdf')
-    parser.add_argument('runs_hdf_key')
-    args = parser.parse_args()
-
-    print( args )
-
 
 if __name__ == '__main__':
 

@@ -85,6 +85,7 @@ def make_idp(
 
     # ds_classes = pd.Series(labels).unique().tolist()
 
+    '''
     # generate and save the shuffle random seed
     shuffle_seed = tf.random.uniform(
         shape = (),
@@ -104,6 +105,7 @@ def make_idp(
             buffer_size = shuffle_buffer_size,
             seed = shuffle_seed,
         )
+        '''
 
     # image loading
     # (img_tensor, label)
@@ -115,6 +117,7 @@ def make_idp(
         num_parallel_calls = AUTOTUNE,
     )
 
+    '''
     # if isTraining and augmentation_func exists, use data augmentation
     if ( is_training and augmentation_func ):
         logging.info("Adding data augmentation.")
@@ -125,6 +128,7 @@ def make_idp(
             ),
             num_parallel_calls = AUTOTUNE,
         )
+        '''
 
     # image resizing
     # (img_tensor_resized, label)
@@ -165,7 +169,7 @@ def make_idp(
     ds = ds.batch( batch_size )
 
     # Prefetch
-    ds = ds.prefetch( buffer_size = AUTOTUNE )
+    # ds = ds.prefetch( buffer_size = AUTOTUNE )
 
     return ds, None
 
