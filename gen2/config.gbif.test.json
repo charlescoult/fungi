@@ -2,12 +2,12 @@
 	"batch_size": 64,
 	"max_epochs": 30,
 	"model": {
-		"base": "Inception_v3_iNaturalist",
+		"base": "Xception",
 		"classifier": {
 			"dropout": 0.3,
 			"output_normalize": false
 		},
-		"learning_rate": 0.001,
+		"learning_rate": 0.0001,
 		"label_smoothing": 0.1
 	},
 	"dataset": {

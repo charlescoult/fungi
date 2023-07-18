@@ -1,10 +1,10 @@
 { 
 	"batch_size": 64,
-	"max_epochs": 20,
+	"max_epochs": 35,
 	"model": {
 		"base": "Inception_v3_iNaturalist",
 		"classifier": {
-			"dropout": 0.3,
+			"dropout": 0.33,
 			"output_normalize": false
 		},
 		"learning_rate": 0.005,

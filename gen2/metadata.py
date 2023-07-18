@@ -18,6 +18,8 @@ class RunMeta(dict):
     def print( self ):
         print( json.dumps( self.data , indent = 3 ) )
 
+    # Saves run's metadata to the 'runs' dataframe defined by the
+    # runs_dir and runs_hdf and runs_hdf properties of this run
     # Will overwrite existing run in dataframe with the same id if one exists
     # - allows updating as we go
     def save(
@@ -55,4 +57,22 @@ class RunMeta(dict):
         # Make sure the run's path doesn't already exist and create it
         if ( not os.path.exists( self['path'] ) ):
             os.makedirs( self['path'] )
+
+        # save to the json file within the run's directory too
+        self.save_file_json()
+
+
+    # Saves to JSON file within run's directory
+    def save_file_json(
+        self,
+    ):
+        filepath = os.path.join(
+            self.runs_dir,
+            self[ 'id' ],
+            'metadata.json',
+        )
+
+        with open( filepath, 'w' ) as file:
+            json.dump( self, file )
+
 

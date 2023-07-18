@@ -2,7 +2,10 @@ from common import *
 
 # TODO: this should really be in the input data pipeline (idp)
 
-def downsample(
+# We have transformed the original dataset through downsampling to produce 
+# a dataset where all classes have the same number of datapoints as the 
+# class with the least amount of datapoints.
+def downsample_df(
     ds_df,
     col_label,
     label_count,
@@ -30,7 +33,9 @@ def downsample(
     ).sample( n = ds_df_label_vc_min )
 
     # Assert the number of datapoints is what we expect
-    assert len( ds_df ) == _data_count
+    # TODO
+
+    return ds_df_trans
 
 
 def transform_dataset_df(
@@ -53,10 +58,6 @@ def transform_dataset_df(
 
     # Assert no NaN values
     assert ds_df.isna().all().all() == False
-
-    # We have transformed the original dataset through downsampling to produce a dataset where all classes have the same number of datapoints as the class with the least amount of datapoints.
-
-    print( 'New datapoint count: %d' % len(ds_df) )
 
     return ds_df
 

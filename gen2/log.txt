@@ -1,0 +1,435 @@
+Imported common
+{'batch_size': 64, 'max_epochs': 30, 'model': {'base': 'Xception', 'classifier': {'dropout': 0.3, 'output_normalize': False}, 'learning_rate': 0.0001, 'label_smoothing': 0.1}, 'dataset': {'data_augmentation': False, 'downsample': None, 'source': 'gbif', 'split_test': 0.05, 'split_val': 0.2}, 'callbacks': {'early_stopping': {'monitor': 'val_loss', 'patience': 8, 'restore_best_weights': True, 'start_from_epoch': 5}}}
+Starting Run
+
+Run ID: 2023_03_29-21_08_27
+Script version: 0.1.0
+Run Path: /media/data/runs/2023_03_29-21_08_27
+
+Saving run metadata.
+
+Label count: 2451
+Datapoint count: 665803
+New datapoint count: 665803
+Creating TRAIN
+From Tensor Slices
+Image Loading
+Image Resizing
+Image preprocessing
+Batch
+Creating VAL
+From Tensor Slices
+Image Loading
+Image Resizing
+Image preprocessing
+Batch
+Creating TEST
+From Tensor Slices
+Image Loading
+Image Resizing
+Image preprocessing
+Batch
+IDPs created
+Building model
+Adding base
+Adding classifier
+Non-trainable weights: 54528
+Trainable weights: 25829051
+Model: "full_model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ xception (Functional)       (None, 2048)              20861480  
+|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯|
+| input_1 (InputLayer)      [(None, 299, 299, 3)]     0         |
+|                                                               |
+| block1_conv1 (Conv2D)     (None, 149, 149, 32)      864       |
+|                                                               |
+| block1_conv1_bn (BatchNorma  (None, 149, 149, 32)   128       |
+| lization)                                                     |
+|                                                               |
+| block1_conv1_act (Activatio  (None, 149, 149, 32)   0         |
+| n)                                                            |
+|                                                               |
+| block1_conv2 (Conv2D)     (None, 147, 147, 64)      18432     |
+|                                                               |
+| block1_conv2_bn (BatchNorma  (None, 147, 147, 64)   256       |
+| lization)                                                     |
+|                                                               |
+| block1_conv2_act (Activatio  (None, 147, 147, 64)   0         |
+| n)                                                            |
+|                                                               |
+| block2_sepconv1 (SeparableC  (None, 147, 147, 128)  8768      |
+| onv2D)                                                        |
+|                                                               |
+| block2_sepconv1_bn (BatchNo  (None, 147, 147, 128)  512       |
+| rmalization)                                                  |
+|                                                               |
+| block2_sepconv2_act (Activa  (None, 147, 147, 128)  0         |
+| tion)                                                         |
+|                                                               |
+| block2_sepconv2 (SeparableC  (None, 147, 147, 128)  17536     |
+| onv2D)                                                        |
+|                                                               |
+| block2_sepconv2_bn (BatchNo  (None, 147, 147, 128)  512       |
+| rmalization)                                                  |
+|                                                               |
+| conv2d (Conv2D)           (None, 74, 74, 128)       8192      |
+|                                                               |
+| block2_pool (MaxPooling2D)  (None, 74, 74, 128)     0         |
+|                                                               |
+| batch_normalization (BatchN  (None, 74, 74, 128)    512       |
+| ormalization)                                                 |
+|                                                               |
+| add (Add)                 (None, 74, 74, 128)       0         |
+|                                                               |
+| block3_sepconv1_act (Activa  (None, 74, 74, 128)    0         |
+| tion)                                                         |
+|                                                               |
+| block3_sepconv1 (SeparableC  (None, 74, 74, 256)    33920     |
+| onv2D)                                                        |
+|                                                               |
+| block3_sepconv1_bn (BatchNo  (None, 74, 74, 256)    1024      |
+| rmalization)                                                  |
+|                                                               |
+| block3_sepconv2_act (Activa  (None, 74, 74, 256)    0         |
+| tion)                                                         |
+|                                                               |
+| block3_sepconv2 (SeparableC  (None, 74, 74, 256)    67840     |
+| onv2D)                                                        |
+|                                                               |
+| block3_sepconv2_bn (BatchNo  (None, 74, 74, 256)    1024      |
+| rmalization)                                                  |
+|                                                               |
+| conv2d_1 (Conv2D)         (None, 37, 37, 256)       32768     |
+|                                                               |
+| block3_pool (MaxPooling2D)  (None, 37, 37, 256)     0         |
+|                                                               |
+| batch_normalization_1 (Batc  (None, 37, 37, 256)    1024      |
+| hNormalization)                                               |
+|                                                               |
+| add_1 (Add)               (None, 37, 37, 256)       0         |
+|                                                               |
+| block4_sepconv1_act (Activa  (None, 37, 37, 256)    0         |
+| tion)                                                         |
+|                                                               |
+| block4_sepconv1 (SeparableC  (None, 37, 37, 728)    188672    |
+| onv2D)                                                        |
+|                                                               |
+| block4_sepconv1_bn (BatchNo  (None, 37, 37, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block4_sepconv2_act (Activa  (None, 37, 37, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block4_sepconv2 (SeparableC  (None, 37, 37, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block4_sepconv2_bn (BatchNo  (None, 37, 37, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| conv2d_2 (Conv2D)         (None, 19, 19, 728)       186368    |
+|                                                               |
+| block4_pool (MaxPooling2D)  (None, 19, 19, 728)     0         |
+|                                                               |
+| batch_normalization_2 (Batc  (None, 19, 19, 728)    2912      |
+| hNormalization)                                               |
+|                                                               |
+| add_2 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block5_sepconv1_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block5_sepconv1 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block5_sepconv1_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block5_sepconv2_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block5_sepconv2 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block5_sepconv2_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block5_sepconv3_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block5_sepconv3 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block5_sepconv3_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| add_3 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block6_sepconv1_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block6_sepconv1 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block6_sepconv1_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block6_sepconv2_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block6_sepconv2 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block6_sepconv2_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block6_sepconv3_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block6_sepconv3 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block6_sepconv3_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| add_4 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block7_sepconv1_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block7_sepconv1 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block7_sepconv1_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block7_sepconv2_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block7_sepconv2 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block7_sepconv2_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block7_sepconv3_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block7_sepconv3 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block7_sepconv3_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| add_5 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block8_sepconv1_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block8_sepconv1 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block8_sepconv1_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block8_sepconv2_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block8_sepconv2 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block8_sepconv2_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block8_sepconv3_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block8_sepconv3 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block8_sepconv3_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| add_6 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block9_sepconv1_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block9_sepconv1 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block9_sepconv1_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block9_sepconv2_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block9_sepconv2 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block9_sepconv2_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| block9_sepconv3_act (Activa  (None, 19, 19, 728)    0         |
+| tion)                                                         |
+|                                                               |
+| block9_sepconv3 (SeparableC  (None, 19, 19, 728)    536536    |
+| onv2D)                                                        |
+|                                                               |
+| block9_sepconv3_bn (BatchNo  (None, 19, 19, 728)    2912      |
+| rmalization)                                                  |
+|                                                               |
+| add_7 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block10_sepconv1_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block10_sepconv1 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block10_sepconv1_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block10_sepconv2_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block10_sepconv2 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block10_sepconv2_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block10_sepconv3_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block10_sepconv3 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block10_sepconv3_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| add_8 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block11_sepconv1_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block11_sepconv1 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block11_sepconv1_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block11_sepconv2_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block11_sepconv2 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block11_sepconv2_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block11_sepconv3_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block11_sepconv3 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block11_sepconv3_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| add_9 (Add)               (None, 19, 19, 728)       0         |
+|                                                               |
+| block12_sepconv1_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block12_sepconv1 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block12_sepconv1_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block12_sepconv2_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block12_sepconv2 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block12_sepconv2_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block12_sepconv3_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block12_sepconv3 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block12_sepconv3_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| add_10 (Add)              (None, 19, 19, 728)       0         |
+|                                                               |
+| block13_sepconv1_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block13_sepconv1 (Separable  (None, 19, 19, 728)    536536    |
+| Conv2D)                                                       |
+|                                                               |
+| block13_sepconv1_bn (BatchN  (None, 19, 19, 728)    2912      |
+| ormalization)                                                 |
+|                                                               |
+| block13_sepconv2_act (Activ  (None, 19, 19, 728)    0         |
+| ation)                                                        |
+|                                                               |
+| block13_sepconv2 (Separable  (None, 19, 19, 1024)   752024    |
+| Conv2D)                                                       |
+|                                                               |
+| block13_sepconv2_bn (BatchN  (None, 19, 19, 1024)   4096      |
+| ormalization)                                                 |
+|                                                               |
+| conv2d_3 (Conv2D)         (None, 10, 10, 1024)      745472    |
+|                                                               |
+| block13_pool (MaxPooling2D)  (None, 10, 10, 1024)   0         |
+|                                                               |
+| batch_normalization_3 (Batc  (None, 10, 10, 1024)   4096      |
+| hNormalization)                                               |
+|                                                               |
+| add_11 (Add)              (None, 10, 10, 1024)      0         |
+|                                                               |
+| block14_sepconv1 (Separable  (None, 10, 10, 1536)   1582080   |
+| Conv2D)                                                       |
+|                                                               |
+| block14_sepconv1_bn (BatchN  (None, 10, 10, 1536)   6144      |
+| ormalization)                                                 |
+|                                                               |
+| block14_sepconv1_act (Activ  (None, 10, 10, 1536)   0         |
+| ation)                                                        |
+|                                                               |
+| block14_sepconv2 (Separable  (None, 10, 10, 2048)   3159552   |
+| Conv2D)                                                       |
+|                                                               |
+| block14_sepconv2_bn (BatchN  (None, 10, 10, 2048)   8192      |
+| ormalization)                                                 |
+|                                                               |
+| block14_sepconv2_act (Activ  (None, 10, 10, 2048)   0         |
+| ation)                                                        |
+|                                                               |
+| global_average_pooling2d (G  (None, 2048)           0         |
+| lobalAveragePooling2D)                                        |
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+ sequential_1 (Sequential)   (None, 2451)              5022099   
+|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯|
+| dense (Dense)             (None, 2451)              5022099   |
+|                                                               |
+| dropout (Dropout)         (None, 2451)              0         |
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+=================================================================
+Total params: 25,883,579
+Trainable params: 25,829,051
+Non-trainable params: 54,528
+_________________________________________________________________
+None
+
+Saving run metadata.
+
+Epoch 1/30

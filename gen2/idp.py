@@ -78,6 +78,9 @@ def make_idp(
     augmentation_func = None,
     preprocessor = None,
 ):
+
+    print("From Tensor Slices")
+
     ds = tf.data.Dataset.from_tensor_slices( (
         filenames,
         labels,
@@ -106,6 +109,7 @@ def make_idp(
             seed = shuffle_seed,
         )
         '''
+    print("Image Loading")
 
     # image loading
     # (img_tensor, label)
@@ -130,6 +134,8 @@ def make_idp(
         )
         '''
 
+    print("Image Resizing")
+
     # image resizing
     # (img_tensor_resized, label)
     ds = ds.map(
@@ -139,6 +145,8 @@ def make_idp(
         ),
         num_parallel_calls = AUTOTUNE,
     )
+
+    print("Image preprocessing")
 
     # image preprocessing
     # (img_tensor_resized_preprocessed, label)
@@ -164,6 +172,8 @@ def make_idp(
             num_parallel_calls = AUTOTUNE,
         )
         '''
+
+    print( "Batch" )
 
     # Batch
     ds = ds.batch( batch_size )

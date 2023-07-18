@@ -9,9 +9,10 @@ from base_model import base_models
 from dataset import datasets
 import dataset_util
 from idp import augmentation_functions, make_idp
-from model import get_model_name, gen_base_model_layer, gen_classifier_model_layer
+from model import get_model_name, gen_base_model_layer, gen_classifier_model_layer, print_weight_counts
 import callbacks
 from scoring import score
+from transformation import transform_dataset_df
 
 import util
 
@@ -183,6 +184,8 @@ def start_run(
     ds_val = ds_val.drop( col_label, axis = 1 )
     ds_test = ds_test.drop( col_label, axis = 1 )
 
+    print("Creating TRAIN")
+
     # IDP creation
     ds_idp_train, run['dataset']['seed_shuffle'] = make_idp(
         ds_train[ col_filename ].values,
@@ -195,6 +198,7 @@ def start_run(
         preprocessor = base_models[ run['model']['base'] ].preprocessor if preprocessing_in_ds else None,
         # label_encoder = label_encoder,
     )
+    print("Creating VAL")
 
     ds_idp_val, _ = make_idp(
         ds_val[ col_filename ].values,
@@ -209,6 +213,8 @@ def start_run(
         # label_encoder = label_encoder,
     )
 
+    print("Creating TEST")
+
     ds_idp_test, _ = make_idp(
         ds_test[ col_filename ].values,
         ds_test.filter( regex = ( col_label + '+' ) ).values,
@@ -221,6 +227,8 @@ def start_run(
         preprocessor = base_models[ run['model']['base'] ].preprocessor if preprocessing_in_ds else None,
         # label_encoder = label_encoder,
     )
+
+    print("IDPs created")
 
     '''
     # Peek at a batch to ensure compliance with expected values
@@ -240,65 +248,73 @@ def start_run(
 
     ## Model Building
 
+    print("Building model")
+
     # Initialize full model
-    with strategy.scope():
-        full_model = tf.keras.Sequential( name = "full_model" )
+    full_model = tf.keras.Sequential( name = "full_model" )
 
-        # if preprocessing_in_ds, then input is assumed to be preprocessed correctly from input dataset pipeline (idp)
-        # else, add preprocessing layer to model
-        if ( not preprocessing_in_ds ):
-            raise Exception('not yet implemented')
+    # if preprocessing_in_ds, then input is assumed to be preprocessed correctly from input dataset pipeline (idp)
+    # else, add preprocessing layer to model
+    if ( not preprocessing_in_ds ):
+        raise Exception('not yet implemented')
 
-        # Add base model to full_model
-        full_model.add( gen_base_model_layer(
-            name = get_model_name( base_models[ run['model']['base'] ].source ),
-            source = base_models[ run['model']['base'] ].source,
-            input_dim = base_models[ run['model']['base'] ].input_dim,
-            trainable = True,
-        ) )
+    print( "Adding base")
 
-        # Add classifier model to full_model
-        # TODO allow selection between different classification models
-        full_model.add( gen_classifier_model_layer(
-            num_classes = len( ds_classes ),
-            dropout = run['model']['classifier']['dropout'],
-            add_softmax = run['model']['classifier']['output_normalize'],
-        ) )
+    # Add base model to full_model
+    full_model.add( gen_base_model_layer(
+        name = get_model_name( base_models[ run['model']['base'] ].source ),
+        source = base_models[ run['model']['base'] ].source,
+        input_dim = base_models[ run['model']['base'] ].input_dim,
+        trainable = True,
+    ) )
+
+    print( "Adding classifier")
+
+    # Add classifier model to full_model
+    # TODO allow selection between different classification models
+    full_model.add( gen_classifier_model_layer(
+        num_classes = len( ds_classes ),
+        dropout = run['model']['classifier']['dropout'],
+        add_softmax = run['model']['classifier']['output_normalize'],
+    ) )
 
     # TODO: allow loading of model weights from previous run
     load_weights = None
 
+    print_weight_counts(full_model)
+    print( full_model.summary( expand_nested = True, ) )
+
     # Compile model
     # Sparse vs non-sparse CCE https://www.kaggle.com/general/197993
-    with strategy.scope():
-        full_model.compile(
-            optimizer = tf.keras.optimizers.Adam(
-                learning_rate = run['model']['learning_rate']
-            ),
-            # loss = tf.keras.losses.SparseCategoricalCrossentropy(
-            #     from_logits = True,
+    full_model.compile(
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate = run['model']['learning_rate']
+        ),
+        # loss = tf.keras.losses.SparseCategoricalCrossentropy(
+        #     from_logits = True,
+        # ),
+        loss = tf.keras.losses.CategoricalCrossentropy(
+            # from_logits = True,
+            from_logits = not run['model']['classifier']['output_normalize'],
+            label_smoothing = run['model']['label_smoothing'],
+        ),
+        metrics = [
+            'accuracy',
+            tf.keras.metrics.AUC(),
+            # tf.keras.metrics.SparseCategoricalCrossentropy(),
+            # tf.keras.metrics.SparseTopKCategoricalAccuracy(
+            #     k = 3,
+            #     name = "Top3",
             # ),
-            loss = tf.keras.losses.CategoricalCrossentropy(
-                from_logits = not run['model']['classifier']['output_normalize'],
-                label_smoothing = run['model']['label_smoothing'],
-            ),
-            metrics = [
-                'accuracy',
-                tf.keras.metrics.AUC(),
-                # tf.keras.metrics.SparseCategoricalCrossentropy(),
-                # tf.keras.metrics.SparseTopKCategoricalAccuracy(
-                #     k = 3,
-                #     name = "Top3",
-                # ),
-                # tf.keras.metrics.SparseTopKCategoricalAccuracy(
-                #     k = 10,
-                #     name="Top10",
-                # ),
-                # tf.keras.metrics.CategoricalCrossentropy(),            
-                # tf.keras.metrics.TopKCategoricalAccuracy( k=3, name="Top3" ),
-                # tf.keras.metrics.TopKCategoricalAccuracy( k=10, name="Top10" ),
-            ],
-        )
+            # tf.keras.metrics.SparseTopKCategoricalAccuracy(
+            #     k = 10,
+            #     name="Top10",
+            # ),
+            tf.keras.metrics.CategoricalCrossentropy(),
+            tf.keras.metrics.TopKCategoricalAccuracy( k = 3, name = "Top3" ),
+            # tf.keras.metrics.TopKCategoricalAccuracy( k=10, name="Top10" ),
+        ],
+    )
 
     callbacks_list = [
         # Tensorboard logs
@@ -327,15 +343,13 @@ def start_run(
     timer['train_start'] = time.perf_counter()
 
     try:
-        with strategy.scope():
-            history = full_model.fit(
-                ds_idp_train,
-                validation_data = ds_idp_val,
-                epochs = run['max_epochs'],
-                callbacks = callbacks_list,
-                # validation_freq=2,
-            )
-        pass
+        history = full_model.fit(
+            ds_idp_train,
+            validation_data = ds_idp_val,
+            epochs = run['max_epochs'],
+            callbacks = callbacks_list,
+            # validation_freq=2,
+        )
     except KeyboardInterrupt:
         print('\n\nInterrupted...')
         # run['interrupted'] = True
@@ -359,10 +373,9 @@ def start_run(
     test_labels = np.concatenate([y for x, y in ds_idp_test], axis = 0)
 
     # get predictions
-    with strategy.scope():
-        predictions = full_model.predict(
-            ds_idp_test,
-        )
+    predictions = full_model.predict(
+        ds_idp_test,
+    )
 
     # score results
     run['scores'] = score(
@@ -422,4 +435,6 @@ if __name__ == '__main__':
         runs_hdf = runs_hdf,
         runs_hdf_key = runs_hdf_key,
     )
-    start_run( runMeta )
+
+    with strategy.scope():
+        start_run( runMeta )

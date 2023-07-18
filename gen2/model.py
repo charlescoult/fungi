@@ -1,6 +1,8 @@
 from common import *
 
-# ## Model Building
+from keras.utils.layer_utils import count_params
+
+## Model Building
 
 # return a name that accurately describes the model building function or
 # the tfhub model (by url) that was passed
@@ -27,7 +29,7 @@ def gen_base_model_layer(
             include_top = False,
             input_shape = ( input_dim, input_dim ) + (3,),
             weights = 'imagenet',
-            # pooling = 'avg',
+            pooling = 'avg',
         )
 
     # otherwise build a layer from the tfhub url that was passed as a string
@@ -36,9 +38,10 @@ def gen_base_model_layer(
             source,
             input_shape = ( input_dim, input_dim ) + (3,),
             name = name,
+            trainable = True,
         )
 
-    base_model.trainable = trainable
+    base_model.trainable = True
 
     return base_model
 
@@ -61,10 +64,20 @@ def gen_classifier_model_layer(
         layers.Dropout(dropout),
     )
 
+    '''
     if ( add_softmax ):
         model.add(
             layers.Activation("softmax", dtype="float32"),
         )
+        '''
+
+    # print( model.summary( expand_nested = True )
 
     return model
 
+
+def print_weight_counts(
+        model,
+):
+    print(f'Non-trainable weights: {count_params(model.non_trainable_weights)}')
+    print(f'Trainable weights: {count_params(model.trainable_weights)}')
